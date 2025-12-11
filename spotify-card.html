@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal ID Module | ID_FORGE</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;600&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- HTML2Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* --- GLOBAL VARIABLES (MATCHING HOME PAGE) --- */
+        :root {
+            --bg-dark: #050510;
+            --bg-card: #0f1020;
+            --primary: #b026ff;
+            --accent: #00f0ff;
+            --text-gray: #8b9bb4;
+            --border-color: #1f2235;
+            --gradient-text: linear-gradient(90deg, #00f0ff, #b026ff);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 10%, #1a1a40 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* --- NAVBAR (EXACT COPY FROM INDEX) --- */
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(5, 5, 16, 0.9);
+            backdrop-filter: blur(10px); position: fixed; width: 100%; top: 0; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { 
+            font-size: 24px; color: var(--accent); 
+            background: rgba(0, 240, 255, 0.1); padding: 8px; border-radius: 5px; 
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .logo-text h2 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 1px; font-size: 22px; }
+        .logo-text span { font-size: 10px; color: var(--primary); letter-spacing: 2px; display: block; }
+
+        .desktop-nav ul { display: flex; gap: 30px; }
+        .desktop-nav ul li a {
+            font-size: 12px; letter-spacing: 1px; font-weight: 600; color: var(--text-gray);
+            transition: color 0.3s; text-transform: uppercase;
+        }
+        .desktop-nav ul li a:hover { color: var(--accent); }
+
+        .hamburger { display: none; font-size: 24px; color: white; cursor: pointer; }
+
+        /* Mobile Menu */
+        .mobile-menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #050510; z-index: 2000; padding: 20px;
+            display: flex; flex-direction: column;
+            transform: translateX(100%); transition: transform 0.3s ease-in-out;
+        }
+        .mobile-menu-overlay.active { transform: translateX(0); }
+        .mobile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        .close-btn { font-size: 24px; color: var(--text-gray); cursor: pointer; padding: 10px; }
+        .mobile-links { padding-left: 10px; }
+        .mobile-links li { margin-bottom: 35px; }
+        .mobile-links a { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 2px; display: block; transition: 0.3s; }
+        .mobile-links a:hover { color: var(--primary); padding-left: 10px; }
+
+        /* --- MAIN CONTENT LAYOUT --- */
+        .main-container {
+            max-width: 1000px; margin: 100px auto 50px auto; padding: 20px;
+        }
+
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); font-size: 14px; margin-bottom: 20px; text-decoration: none; font-family: 'Rajdhani'; font-weight: 600; text-transform: uppercase; }
+        .back-link:hover { text-decoration: underline; }
+
+        /* --- CUSTOMIZATION TOOLBAR (Dark Theme) --- */
+        .toolbar {
+            background: rgba(15, 16, 32, 0.8);
+            border: 1px solid var(--border-color);
+            padding: 20px; border-radius: 12px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin-bottom: 40px;
+        }
+
+        .tool-group { display: flex; align-items: center; gap: 15px; font-family: 'Rajdhani'; font-weight: 600; text-transform: uppercase; color: var(--text-gray); font-size: 14px;}
+        
+        input[type="color"] {
+            -webkit-appearance: none; border: 1px solid var(--border-color); 
+            width: 40px; height: 30px; cursor: pointer; border-radius: 5px; padding: 2px; background: #0b0c15;
+        }
+        input[type="range"] { accent-color: var(--accent); width: 120px; cursor: pointer; }
+
+        /* --- PREVIEW AREA --- */
+        .card-preview-area {
+            display: flex; justify-content: center;
+            perspective: 1000px; margin-bottom: 40px;
+        }
+
+        /* --- THE ID CARD DESIGN (White Card) --- */
+        .id-card {
+            width: 600px; height: 380px;
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            overflow: hidden; position: relative;
+            display: flex; flex-direction: column;
+            font-family: 'Roboto', sans-serif;
+            transform-style: preserve-3d;
+        }
+
+        /* Card Header */
+        .card-header {
+            background-color: #9089f0; /* Default */
+            padding: 15px 25px;
+            display: flex; align-items: center; gap: 15px;
+            transition: 0.3s;
+        }
+        .inst-logo { width: 45px; height: 55px; object-fit: contain; }
+        .inst-name {
+            font-size: 24px; font-weight: 700; color: white; 
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Card Body */
+        .card-body {
+            flex: 1; background: white; padding: 20px 35px; color: #333;
+        }
+        .student-id-title {
+            text-align: center; font-size: 20px; font-weight: 800; color: #222;
+            margin-bottom: 25px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .content-grid {
+            display: grid; grid-template-columns: 140px 1fr; gap: 25px; align-items: start;
+        }
+
+        /* Photo Column */
+        .photo-col { display: flex; flex-direction: column; align-items: center; }
+        .student-photo {
+            width: 120px; height: 135px; object-fit: cover;
+            border: 1px solid #ccc; margin-bottom: 10px;
+        }
+        .roll-no { font-size: 18px; font-weight: 800; color: #000; }
+
+        /* Details Column */
+        .details-col { display: flex; flex-direction: column; gap: 10px; }
+        .info-row {
+            display: grid; grid-template-columns: 110px 15px 1fr;
+            font-size: 15px; color: #444; line-height: 1.4;
+        }
+        .label { font-weight: 700; color: #222; }
+        .colon { font-weight: 700; }
+        .val { font-weight: 500; color: #555; }
+
+        /* Card Footer */
+        .card-footer {
+            background-color: #9089f0;
+            padding: 12px; text-align: center; color: white;
+            font-weight: 700; font-size: 15px; text-transform: uppercase;
+            transition: 0.3s;
+        }
+
+        /* --- DOWNLOAD BUTTON --- */
+        .action-area { text-align: center; margin-bottom: 50px; }
+        .download-btn {
+            background: linear-gradient(135deg, #00f0ff, #2563eb);
+            color: white; border: none; padding: 15px 50px;
+            border-radius: 5px; font-size: 16px; font-weight: 700;
+            cursor: pointer; box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            transition: 0.3s; font-family: 'Rajdhani'; letter-spacing: 1px; text-transform: uppercase;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+            display: inline-flex; align-items: center; gap: 10px;
+        }
+        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 0 30px rgba(0, 240, 255, 0.5); }
+
+        /* --- FORM SECTION (Dark Theme) --- */
+        .edit-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 30px; border-radius: 15px;
+            position: relative;
+        }
+        .form-title {
+            font-family: 'Rajdhani'; font-size: 24px; color: white; margin-bottom: 25px;
+            border-left: 4px solid var(--primary); padding-left: 15px; text-transform: uppercase; font-weight: 700;
+        }
+
+        .edit-form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 11px; font-weight: 700; color: var(--text-gray); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .input-group input { 
+            background: #0b0c15; border: 1px solid var(--border-color); color: white; 
+            padding: 12px; border-radius: 6px; outline: none; transition: 0.3s; font-family: 'Inter';
+        }
+        .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(0, 240, 255, 0.2); }
+        
+        .full { grid-column: span 2; }
+
+        /* File Input Styling */
+        .file-upload { position: relative; overflow: hidden; display: inline-block; width: 100%;}
+        .file-upload input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        .btn-upload {
+            background: rgba(255,255,255,0.05); border: 1px dashed var(--text-gray);
+            color: var(--text-gray); padding: 12px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer; transition: 0.3s;
+        }
+        .btn-upload:hover { border-color: var(--primary); color: var(--primary); background: rgba(176, 38, 255, 0.05); }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none; }
+            .hamburger { display: block; }
+            .id-card { width: 100%; height: auto; aspect-ratio: 1.58; }
+            .inst-name { font-size: 16px; }
+            .student-id-title { font-size: 16px; margin-bottom: 15px;}
+            .content-grid { grid-template-columns: 100px 1fr; gap: 15px; }
+            .student-photo { width: 90px; height: 100px; }
+            .info-row { font-size: 12px; grid-template-columns: 90px 10px 1fr; gap: 0; }
+            .edit-form { grid-template-columns: 1fr; }
+            .full { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar (EXACT SAME AS INDEX) -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-microchip"></i></div>
+            <div class="logo-text">
+                <h2>ID_FORGE</h2>
+                <span>SYSTEM 2067</span>
+            </div>
+        </div>
+
+        <!-- Desktop Menu -->
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html">Tools</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="support.html">Support</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hamburger for Mobile -->
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenu">
+        <div class="mobile-header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-microchip"></i></div>
+                <div class="logo-text">
+                    <h2>ID_FORGE</h2>
+                    <span>SYSTEM 2067</span>
+                </div>
+            </div>
+            <div class="close-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+        <ul class="mobile-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html">Tools</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="support.html">Support</a></li>
+        </ul>
+    </div>
+
+    <div class="main-container">
+        
+        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Protocols</a>
+
+        <!-- CUSTOMIZATION TOOLBAR -->
+        <div class="toolbar">
+            <div class="tool-group">
+                <i class="fa-solid fa-fill-drip"></i>
+                <label>Header Color</label>
+                <input type="color" id="picker_header" value="#9089f0" oninput="updateStyle()">
+            </div>
+            <div class="tool-group">
+                <i class="fa-solid fa-fill"></i>
+                <label>Card BG</label>
+                <input type="color" id="picker_card" value="#ffffff" oninput="updateStyle()">
+            </div>
+            <div class="tool-group">
+                <i class="fa-solid fa-arrows-up-down"></i>
+                <label>Header Size</label>
+                <input type="range" id="range_size" min="10" max="30" value="15" oninput="updateStyle()">
+            </div>
+        </div>
+
+        <!-- PREVIEW AREA -->
+        <div class="card-preview-area">
+            <div class="id-card" id="cardToDownload">
+                
+                <!-- HEADER -->
+                <div class="card-header" id="card_header">
+                    <img src="https://i.ibb.co/k5c5Z6q/placeholder-shield.png" class="inst-logo" id="view_logo">
+                    <div class="inst-name" id="view_uni">Dhaka Residential Model College</div>
+                </div>
+
+                <!-- BODY -->
+                <div class="card-body" id="card_body_bg">
+                    <div class="student-id-title" id="view_id_title">STUDENT ID: DRMC-2025101</div>
+
+                    <div class="content-grid">
+                        <!-- Left: Photo -->
+                        <div class="photo-col">
+                            <img src="https://i.ibb.co/5GzXk7j/placeholder-user.png" class="student-photo" id="view_photo">
+                            <div class="roll-no" id="view_roll">Roll: 01</div>
+                        </div>
+
+                        <!-- Right: Details -->
+                        <div class="details-col">
+                            <div class="info-row">
+                                <span class="label">Name</span> <span class="colon">:</span>
+                                <span class="val" id="view_name">RIYAZ KHAN</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Class</span> <span class="colon">:</span>
+                                <span class="val" id="view_class">XII</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">DOB</span> <span class="colon">:</span>
+                                <span class="val" id="view_dob">February 10, 2008</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Mobile</span> <span class="colon">:</span>
+                                <span class="val" id="view_mobile">+88017********</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="label">Home Address</span> <span class="colon">:</span>
+                                <span class="val" id="view_addr">Mirpur, Dhaka</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="card-footer" id="card_footer">
+                    ISSUE DATE: <span id="view_date">17 July 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOWNLOAD BUTTON -->
+        <div class="action-area">
+            <button class="download-btn" onclick="downloadCard()">
+                <i class="fa-solid fa-download"></i> Download Card
+            </button>
+        </div>
+
+        <!-- FORM SECTION -->
+        <div class="edit-container">
+            <div class="form-title">Data Configuration</div>
+            <div class="edit-form">
+                <div class="input-group full">
+                    <label>Institution Name</label>
+                    <input type="text" id="inp_uni" value="Dhaka Residential Model College" oninput="updateText()">
+                </div>
+                <div class="input-group">
+                    <label>Student ID Header</label>
+                    <input type="text" id="inp_id_title" value="STUDENT ID: DRMC-2025101" oninput="updateText()">
+                </div>
+                <div class="input-group">
+                    <label>Roll Text</label>
+                    <input type="text" id="inp_roll" value="Roll: 01" oninput="updateText()">
+                </div>
+
+                <!-- Details -->
+                <div class="input-group">
+                    <label>Name</label>
+                    <input type="text" id="inp_name" value="RIYAZ KHAN" oninput="updateText()">
+                </div>
+                <div class="input-group">
+                    <label>Class</label>
+                    <input type="text" id="inp_class" value="XII" oninput="updateText()">
+                </div>
+                <div class="input-group">
+                    <label>Date of Birth</label>
+                    <input type="text" id="inp_dob" value="February 10, 2008" oninput="updateText()">
+                </div>
+                <div class="input-group">
+                    <label>Mobile</label>
+                    <input type="text" id="inp_mobile" value="+88017********" oninput="updateText()">
+                </div>
+                <div class="input-group full">
+                    <label>Home Address</label>
+                    <input type="text" id="inp_addr" value="Mirpur, Dhaka" oninput="updateText()">
+                </div>
+                <div class="input-group full">
+                    <label>Issue Date</label>
+                    <input type="text" id="inp_date" value="17 July 2025" oninput="updateText()">
+                </div>
+
+                <!-- Uploads -->
+                <div class="input-group">
+                    <label>Student Photo</label>
+                    <div class="file-upload">
+                        <div class="btn-upload"><i class="fa-solid fa-upload"></i> Choose Image</div>
+                        <input type="file" id="upl_photo" accept="image/*">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Institution Logo</label>
+                    <div class="file-upload">
+                        <div class="btn-upload"><i class="fa-solid fa-upload"></i> Choose Logo</div>
+                        <input type="file" id="upl_logo" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle Mobile Menu
+        function toggleMenu() {
+            var menu = document.getElementById("mobileMenu");
+            menu.classList.toggle("active");
+        }
+
+        // 1. Update Colors & Size (Toolbar)
+        function updateStyle() {
+            let headerColor = document.getElementById('picker_header').value;
+            let cardColor = document.getElementById('picker_card').value;
+            let size = document.getElementById('range_size').value;
+
+            // Apply Backgrounds
+            document.getElementById('card_header').style.backgroundColor = headerColor;
+            document.getElementById('card_footer').style.backgroundColor = headerColor;
+            document.getElementById('card_body_bg').style.backgroundColor = cardColor;
+
+            // Apply Size (Padding)
+            document.getElementById('card_header').style.padding = size + "px 20px";
+            document.getElementById('card_footer').style.padding = (size/1.5) + "px";
+        }
+
+        // 2. Update Text Fields
+        function updateText() {
+            document.getElementById('view_uni').innerText = document.getElementById('inp_uni').value;
+            document.getElementById('view_id_title').innerText = document.getElementById('inp_id_title').value;
+            document.getElementById('view_roll').innerText = document.getElementById('inp_roll').value;
+            
+            document.getElementById('view_name').innerText = document.getElementById('inp_name').value;
+            document.getElementById('view_class').innerText = document.getElementById('inp_class').value;
+            document.getElementById('view_dob').innerText = document.getElementById('inp_dob').value;
+            document.getElementById('view_mobile').innerText = document.getElementById('inp_mobile').value;
+            document.getElementById('view_addr').innerText = document.getElementById('inp_addr').value;
+            document.getElementById('view_date').innerText = document.getElementById('inp_date').value;
+        }
+
+        // 3. Handle Image Uploads
+        document.getElementById('upl_photo').addEventListener('change', function(e) {
+            if(e.target.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(evt) { document.getElementById('view_photo').src = evt.target.result; };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('upl_logo').addEventListener('change', function(e) {
+            if(e.target.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(evt) { document.getElementById('view_logo').src = evt.target.result; };
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        // 4. Download Logic
+        function downloadCard() {
+            const card = document.getElementById('cardToDownload');
+            html2canvas(card, { scale: 3, useCORS: true }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Horizontal_ID.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct Edit Certificate | ID_FORGE</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Tinos:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- HTML2Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        /* --- GLOBAL VARIABLES --- */
+        :root {
+            --bg-dark: #050510;
+            --bg-card: #0f1020;
+            --primary: #b026ff;
+            --accent: #00f0ff;
+            --text-gray: #8b9bb4;
+            --border-color: #1f2235;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            background-image: 
+                radial-gradient(circle at 50% 10%, #1a1a40 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 40px 40px, 40px 40px;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* --- NAVBAR (EXACT COPY FROM INDEX) --- */
+        header {
+            width: 100%; display: flex; justify-content: space-between; align-items: center;
+            padding: 15px 5%; background: rgba(5, 5, 16, 0.9);
+            backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .logo { display: flex; align-items: center; gap: 10px; }
+        .logo-icon { 
+            font-size: 24px; color: var(--accent); 
+            background: rgba(0, 240, 255, 0.1); padding: 8px; border-radius: 5px; 
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .logo-text h2 { font-family: 'Rajdhani', sans-serif; font-weight: 700; letter-spacing: 1px; font-size: 22px; }
+        .logo-text span { font-size: 10px; color: var(--primary); letter-spacing: 2px; display: block; }
+
+        .desktop-nav ul { display: flex; gap: 30px; }
+        .desktop-nav ul li a {
+            font-size: 12px; letter-spacing: 1px; font-weight: 600; color: var(--text-gray);
+            transition: color 0.3s; text-transform: uppercase;
+        }
+        .desktop-nav ul li a:hover { color: var(--accent); }
+
+        .hamburger { display: none; font-size: 24px; color: white; cursor: pointer; }
+
+        /* Mobile Menu */
+        .mobile-menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #050510; z-index: 2000; padding: 20px;
+            display: flex; flex-direction: column;
+            transform: translateX(100%); transition: transform 0.3s ease-in-out;
+        }
+        .mobile-menu-overlay.active { transform: translateX(0); }
+        .mobile-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; }
+        .close-btn { font-size: 24px; color: var(--text-gray); cursor: pointer; padding: 10px; }
+        .mobile-links { padding-left: 10px; }
+        .mobile-links li { margin-bottom: 35px; }
+        .mobile-links a { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; color: white; text-transform: uppercase; letter-spacing: 2px; display: block; transition: 0.3s; }
+        .mobile-links a:hover { color: var(--primary); padding-left: 10px; }
+
+        /* --- MAIN CONTAINER --- */
+        .container {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; max-width: 1000px;
+            margin: 40px 0 80px 0;
+            padding: 0 20px;
+        }
+
+        .back-link { 
+            color: var(--text-gray); text-decoration: none; font-weight: 600; font-size: 14px; 
+            text-transform: uppercase; margin-bottom: 20px; align-self: flex-start;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .back-link:hover { color: var(--accent); }
+
+        .instruction-banner {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            text-align: center;
+            font-family: 'Inter';
+            width: 100%;
+        }
+
+        /* --- HIDDEN INPUTS --- */
+        .hidden-file { display: none; }
+
+        /* --- DOCUMENT PAPER --- */
+        .document-wrapper {
+            /* This wrapper ensures scroll on mobile if document is too wide */
+            width: 100%;
+            overflow-x: auto;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 20px; /* Space for shadow */
+        }
+
+        .document-paper {
+            width: 800px;
+            min-width: 800px; /* Force minimum width */
+            min-height: 950px;
+            background: white;
+            color: black;
+            padding: 40px;
+            font-family: 'Tinos', serif;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        /* --- EDITABLE STYLES --- */
+        [contenteditable="true"]:hover {
+            outline: 1px dashed var(--accent);
+            background-color: rgba(0, 240, 255, 0.05);
+            cursor: text;
+        }
+        
+        .editable-img:hover {
+            opacity: 0.7;
+            cursor: pointer;
+            outline: 2px solid var(--primary);
+        }
+
+        /* --- DOCUMENT CONTENT --- */
+        .doc-header { text-align: center; margin-bottom: 20px; }
+        .doc-logo { width: 70px; height: 70px; object-fit: contain; margin-bottom: 5px; }
+        .doc-uni-name { font-size: 26px; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; color: #000; letter-spacing: 0.5px; }
+        .doc-sub-header { font-size: 16px; font-weight: 700; color: #222; margin-bottom: 3px; }
+        .doc-address { font-size: 14px; color: #333; margin-bottom: 15px; }
+        .doc-title { font-size: 20px; font-weight: 800; text-transform: uppercase; text-decoration: underline; margin-top: 10px; display: inline-block; }
+
+        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 14px; }
+        th, td { border: 1px solid #000; padding: 6px 10px; }
+        .bg-blue { background-color: #dbeafe; font-weight: 700; text-transform: uppercase; text-align: center; }
+
+        /* Split Tables */
+        .split-table-container { display: flex; gap: 0; border: 1px solid #000; margin-bottom: 20px; }
+        .split-box { flex: 1; }
+        .split-box table { border: none; margin: 0; }
+        .split-box table td, .split-box table th { border: 1px solid #000; }
+        .split-box:first-child { border-right: 1px solid #000; }
+
+        /* Fee Table */
+        .fee-table th { text-align: center; }
+        .fee-table td:nth-child(3) { text-align: right; }
+
+        /* Footer */
+        .payment-info { border: 1px solid #000; margin-top: 5px; }
+        .payment-header { background-color: #dbeafe; font-weight: 700; text-align: center; padding: 5px; border-bottom: 1px solid #000; text-transform: uppercase; font-size: 14px;}
+        .payment-body { padding: 40px 15px 10px 15px; display: flex; justify-content: space-between; align-items: flex-end; }
+        
+        .signature-area { text-align: center; width: 200px; }
+        .sig-img { height: 40px; object-fit: contain; display: block; margin: 0 auto; }
+        .sig-line { border-top: 1px solid #000; margin-top: 5px; padding-top: 2px; font-size: 14px; }
+        .watermark-text { color: #ccc; font-size: 12px; margin-top: 10px; font-family: sans-serif; }
+
+        /* --- DOWNLOAD BUTTON --- */
+        .download-btn {
+            background: linear-gradient(135deg, #00f0ff, #2563eb);
+            color: white; border: none; padding: 15px 60px;
+            border-radius: 50px; font-size: 18px; font-weight: 700;
+            cursor: pointer; box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            transition: 0.3s; font-family: 'Rajdhani'; letter-spacing: 1px; text-transform: uppercase;
+            margin-top: 30px; display: flex; align-items: center; gap: 10px;
+        }
+        .download-btn:hover { transform: translateY(-3px); box-shadow: 0 0 30px rgba(0, 240, 255, 0.6); }
+
+        /* --- RESPONSIVE FIXES --- */
+        @media (max-width: 768px) {
+            /* Nav */
+            .desktop-nav { display: none; }
+            .hamburger { display: block; }
+            
+            /* Container */
+            .container { margin-top: 20px; }
+            
+            /* Document Scaling for Mobile */
+            /* We use transform scale to fit the 800px document on small screens */
+            .document-wrapper {
+                display: block;
+                overflow: hidden; /* Hide scrollbars, we scale instead */
+                height: 500px; /* Approximate scaled height */
+                margin-bottom: 50px;
+            }
+            .document-paper {
+                transform: scale(0.42); /* Scale down significantly */
+                transform-origin: top left;
+                margin-bottom: 0;
+            }
+            
+            /* Adjust button positioning */
+            .download-btn { width: 100%; justify-content: center; }
+        }
+        
+        /* Slightly larger mobile/tablets */
+        @media (min-width: 400px) and (max-width: 768px) {
+             .document-wrapper { height: 600px; }
+             .document-paper { transform: scale(0.55); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header / Navbar -->
+    <header>
+        <div class="logo">
+            <div class="logo-icon"><i class="fa-solid fa-microchip"></i></div>
+            <div class="logo-text">
+                <h2>ID_FORGE</h2>
+                <span>SYSTEM 2067</span>
+            </div>
+        </div>
+
+        <!-- Desktop Menu -->
+        <nav class="desktop-nav">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html">Tools</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="support.html">Support</a></li>
+            </ul>
+        </nav>
+
+        <!-- Hamburger for Mobile -->
+        <div class="hamburger" onclick="toggleMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </div>
+    </header>
+
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenu">
+        <div class="mobile-header">
+            <div class="logo">
+                <div class="logo-icon"><i class="fa-solid fa-microchip"></i></div>
+                <div class="logo-text">
+                    <h2>ID_FORGE</h2>
+                    <span>SYSTEM 2067</span>
+                </div>
+            </div>
+            <div class="close-btn" onclick="toggleMenu()">
+                <i class="fa-solid fa-xmark"></i>
+            </div>
+        </div>
+        <ul class="mobile-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="index.html">Tools</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="support.html">Support</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        
+        <a href="index.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Home</a>
+
+        <div class="instruction-banner">
+            <i class="fa-solid fa-pen-to-square"></i> 
+            <strong>EDIT MODE:</strong> Click directly on any text, logo, or signature to edit or upload.
+        </div>
+
+        <!-- HIDDEN FILE INPUTS -->
+        <input type="file" id="upl_logo" accept="image/*" class="hidden-file" onchange="updateImage(this, 'doc_logo')">
+        <input type="file" id="upl_sign" accept="image/*" class="hidden-file" onchange="updateImage(this, 'doc_sign')">
+
+        <!-- DOCUMENT WRAPPER (For Scroll/Scale) -->
+        <div class="document-wrapper">
+            <div class="document-paper" id="docToDownload">
+                
+                <!-- HEADER -->
+                <div class="doc-header">
+                    <!-- Click logo to upload -->
+                    <img src="https://i.ibb.co/k5c5Z6q/placeholder-shield.png" class="doc-logo editable-img" id="doc_logo" onclick="triggerUpload('upl_logo')">
+                    <div class="doc-uni-name" contenteditable="true">NORTH SOUTH UNIVERSITY</div>
+                    <div class="doc-sub-header" contenteditable="true">Center of Excellence in Higher Education</div>
+                    <div class="doc-address" contenteditable="true">Plot 15, Block B, Bashundhara R/A, Dhaka-1229, Bangladesh</div>
+                    <div class="doc-title" contenteditable="true">OFFICIAL TUITION MONEY RECEIPT</div>
+                </div>
+
+                <!-- DETAILS TABLES -->
+                <div class="split-table-container">
+                    <div class="split-box">
+                        <table>
+                            <tr class="bg-blue"><th colspan="2" style="border-top:none; border-left:none;">RECEIPT DETAILS</th></tr>
+                            <tr>
+                                <td style="width:30%; border-left:none;">Receipt No</td>
+                                <td style="font-weight:600;" contenteditable="true">NSU-RCPT-738786F</td>
+                            </tr>
+                            <tr>
+                                <td style="border-left:none;">Date</td>
+                                <td contenteditable="true">15/11/2025</td>
+                            </tr>
+                            <tr>
+                                <td style="border-left:none;">Semester</td>
+                                <td contenteditable="true">Fall 2025</td>
+                            </tr>
+                            <tr>
+                                <td style="border-left:none;">D.O.B</td>
+                                <td contenteditable="true">01/01/2000</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="split-box">
+                        <table>
+                            <tr class="bg-blue"><th colspan="2" style="border-top:none; border-right:none;">STUDENT PARTICULARS</th></tr>
+                            <tr>
+                                <td style="width:30%;">Student Name</td>
+                                <td style="font-weight:600; border-right:none;" contenteditable="true">Kader Islam</td>
+                            </tr>
+                            <tr>
+                                <td>Student ID#</td>
+                                <td style="border-right:none;" contenteditable="true">451-543-066</td>
+                            </tr>
+                            <tr>
+                                <td>Program</td>
+                                <td style="border-right:none;" contenteditable="true">BS in CSE</td>
+                            </tr>
+                            <tr>
+                                <td>Session</td>
+                                <td style="border-right:none;" contenteditable="true">2025-2029</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- FEE TABLE -->
+                <table class="fee-table">
+                    <tr class="bg-blue">
+                        <th colspan="3">FEE ITEMIZATION</th>
+                    </tr>
+                    <tr style="background:#efefef;">
+                        <th style="width:60%; text-align:left;">Fee Description</th>
+                        <th style="width:15%;">Details</th>
+                        <th style="width:25%; text-align:right;">Amount</th>
+                    </tr>
+                    
+                    <!-- Editable Rows -->
+                    <tr>
+                        <td contenteditable="true">Tuition Fee (Hourly Calculation)<br>12 Credits @ Tk. 6,500</td>
+                        <td style="text-align:center;" contenteditable="true">1</td>
+                        <td contenteditable="true">Tk. 78,000.00</td>
+                    </tr>
+                    <tr>
+                        <td contenteditable="true">Classic Day Fee</td>
+                        <td style="text-align:center;" contenteditable="true">1</td>
+                        <td contenteditable="true">Tk. 5,000.00</td>
+                    </tr>
+                    <tr>
+                        <td contenteditable="true">Foundation Fee</td>
+                        <td style="text-align:center;" contenteditable="true">1</td>
+                        <td contenteditable="true">Tk. 2,500.00</td>
+                    </tr>
+                     <tr>
+                        <td contenteditable="true">Activity Fee</td>
+                        <td style="text-align:center;" contenteditable="true">2</td>
+                        <td contenteditable="true">Tk. 1,000.00</td>
+                    </tr>
+                     <tr>
+                        <td contenteditable="true">Computer Lab Fee</td>
+                        <td style="text-align:center;" contenteditable="true">1</td>
+                        <td contenteditable="true">Tk. 4,000.00</td>
+                    </tr>
+                     <tr>
+                        <td contenteditable="true">Library Fee</td>
+                        <td style="text-align:center;" contenteditable="true">1</td>
+                        <td contenteditable="true">Tk. 700.00</td>
+                    </tr>
+                    <tr style="background:#efefef;">
+                        <td colspan="2" style="font-weight:800;">NET AMOUNT DUE</td>
+                        <td style="text-align:right; font-weight:800;" contenteditable="true">Tk. 69,400.00</td>
+                    </tr>
+                </table>
+
+                <!-- FOOTER -->
+                <div class="payment-info">
+                    <div class="payment-header">PAYMENT INFORMATION</div>
+                    <div class="payment-body">
+                        <div class="amount-paid">
+                            Amount Paid: <span contenteditable="true" style="font-weight:bold;">Tk. 69,400.00</span>
+                            <div class="watermark-text" contenteditable="true">@ID_FORGE_SYSTEM</div>
+                        </div>
+                        <div class="signature-area">
+                            <!-- Click signature to upload -->
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Signature_sample.svg/1200px-Signature_sample.svg.png" class="sig-img editable-img" id="doc_sign" onclick="triggerUpload('upl_sign')">
+                            <div class="sig-line">Authorized Signature</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DOWNLOAD BUTTON -->
+        <button class="download-btn" onclick="downloadPDF()">
+            <i class="fa-solid fa-download"></i> Download Certificate
+        </button>
+
+    </div>
+
+    <script>
+        // Toggle Mobile Menu
+        function toggleMenu() {
+            var menu = document.getElementById("mobileMenu");
+            menu.classList.toggle("active");
+        }
+
+        // Trigger hidden file input
+        function triggerUpload(inputId) {
+            document.getElementById(inputId).click();
+        }
+
+        // Update Image Preview
+        function updateImage(input, imgId) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(imgId).src = e.target.result;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Download Logic
+        function downloadPDF() {
+            const doc = document.getElementById('docToDownload');
+            
+            // Temporarily remove editable outlines for screenshot
+            const editables = document.querySelectorAll('[contenteditable="true"]');
+            editables.forEach(el => el.blur()); // Remove focus
+
+            html2canvas(doc, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Certificate.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
